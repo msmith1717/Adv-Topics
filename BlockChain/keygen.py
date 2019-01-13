@@ -50,17 +50,18 @@ def getPrime(numBits):
         
         return pow(2, num-1, num) == 1
 
+    # Keeps track of the number of rounds of division we need to complete
+    wentOver = 1
     # Find the prime directly after this integer
     while not isPrime(num):
 
         num = num + 2
 
-        wentOver = 1
         # If we went over our bit-length, divide by two and keep going
         while num.bit_length() > numBits:
 			# The number got too large so we divide by
 			# 2*the number of rounds we went over
-            num = num >> wentOver*1
+            num = num >> (wentOver*1)
             wentOver += 1
 
             # if the number is even and not two, then add one

@@ -278,6 +278,20 @@ class BlockChain:
             self.next = None
             self.prev = None
 
+    class List_Iterator:
+        def __init__(self, list):
+            self.__iter = list.head
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            if self.__iter == None:
+                raise StopIteration
+            
+            block = self.__iter.data
+            self.__iter = self.__iter.next
+            return block
 
     """
         Constructs a Block Chain and creates a Genesis Block signed by 
@@ -294,17 +308,15 @@ class BlockChain:
 
     # Return an iterator for the list
     def __iter__(self):
-        self.__iter = self.head
-        return self
-    
-    # Grab the next item of the iterator
-    def __next__(self):
-        if self.__iter == None:
-            raise StopIteration
-
-        block = self.__iter.data
-        self.__iter = self.__iter.next
-        return block
+        return BlockChain.List_Iterator(self)
+        
+    def iterator(self, start=0):
+        it = iter(self)
+        
+        s = 0
+        while s < start:
+            next(it)
+        return it
 
     # Grab the first block of the chain
     def getFirstBlock(self):

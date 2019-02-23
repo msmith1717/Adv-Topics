@@ -309,9 +309,9 @@ class BlockChain:
     # Return an iterator for the list
     def __iter__(self):
         return BlockChain.List_Iterator(self)
-        
+
     def iterator(self, start=0):
-        it = iter(self)
+        it = BlockChain.List_Iterator(self)
         
         s = 0
         while s < start:

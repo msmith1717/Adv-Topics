@@ -511,6 +511,9 @@ class BlockChain:
 """
 class Wallet:
     def __init__(self, realname, public, private, n):
+        if realname == None or len(realname.strip()) == 0:
+            realname = ""
+        
         self.name = realname
         self.public = public
         self.private = private

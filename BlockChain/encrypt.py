@@ -1,6 +1,9 @@
 '''
 Author: Brian Sea
 Implementation of RSA encryption/decryption
+
+Utilities for using, encrypting, and decrypting data using the
+RSA algorithm.  Keys must be in Base64.
 '''
 
 
@@ -17,12 +20,6 @@ if sys.version_info < (3,5):
     print('Python version detected: ' + str(sys.version_info[0]) + '.'+str(sys.version_info[1]))
     print('Python version required: 3.5')
     sys.exit(1)
-
-
-"""
-    Utilities for using, encrypting, and decrypting data using the
-    RSA algorithm.  Keys must be in Base64.
-"""
 
 """
     Loads and returns the keys from a file

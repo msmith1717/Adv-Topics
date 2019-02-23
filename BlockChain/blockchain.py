@@ -38,9 +38,9 @@ class Transaction:
         sender: Wallet of the sender; None indicates 
                 a transaction by the System
         hash: the SHA256 hash of the transaction
-              signed by the private key of the sender or, if the 
-			  transaction is a System transaction, by the private key
-			  of the receiver (a miner reward)
+            signed by the private key of the sender or, if the 
+			transaction is a System transaction, by the private key
+			of the receiver (a miner reward)
     """
     def __init__(self, recv, amount = 0, sender = None):
         self.timestamp = time.time()
@@ -53,7 +53,7 @@ class Transaction:
 
         # Calculate the SHA256 hash 
         self.hash = self.sha256()
-       
+
         # Sign the hash if the sender is not the System
         if sender != None:
             self.hash = encrypt.encryptWithKey(sender.private+sender.n, self.hash)
@@ -305,7 +305,7 @@ class BlockChain:
         self.__iter = self.__iter.next
         return block
 
-	# Grab the first block of the chain
+    # Grab the first block of the chain
     def getFirstBlock(self):
         if self.head == None:
             return None

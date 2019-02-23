@@ -267,6 +267,7 @@ class Block:
 class BlockChain:
     difficulty = 2
     MINER_REWARD = 10
+    SEED = 100
     
     """
         Internal containers for our doubly-linked list
@@ -285,7 +286,7 @@ class BlockChain:
     def __init__(self, creator):
         
         self.tail = None
-        originalTransaction = [Transaction(creator, 100)]
+        originalTransaction = [Transaction(creator, BlockChain.SEED)]
         genData, rejected = self.mineBlock(originalTransaction)
     
         self.head = BlockChain.Node(genData)
@@ -516,11 +517,11 @@ if __name__ == '__main__':
     """
     Test Transactions beyond the Genesis Block 
     ** One transaction per block
-       Transaction 1: A->B 40 (PASSES)
-       Transaction 2: B->A 15 (PASSES)
-       Transaction 3: A->B 60 (PASSES)
-       Transaction 4: A->B 20 (FAILS)
-       Transaction 5: B->A 50 (PASSES)
+        Transaction 1: A->B 40 (PASSES)
+        Transaction 2: B->A 15 (PASSES)
+        Transaction 3: A->B 60 (PASSES)
+        Transaction 4: A->B 20 (FAILS)
+        Transaction 5: B->A 50 (PASSES)
     """
 
     # Transactions are organized as lists of lists
@@ -553,7 +554,7 @@ if __name__ == '__main__':
                     sender = name
                 if ID == trans.recv:
                     recvr = name
-       
+
             # Print out the status of each Transaction
             print('Transaction (Amount: {0}): {1}->{2}'.format(
                 trans.amount, sender, recvr
@@ -570,7 +571,7 @@ if __name__ == '__main__':
         sys.stdout.flush()
 
         block, rejected = chain.mineBlock(transaction, keys['Miner'])
-       
+
         # Print out the result of the Block being Mined
         if block != None:
             print( '({0}, {1})'.format(block.nonce, block.currHash))

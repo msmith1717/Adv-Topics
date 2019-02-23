@@ -1,3 +1,9 @@
+'''
+Author: Brian Sea
+
+Implementation of simple blockchain using Proof Of Work (POW)
+'''
+
 # Allow Python 2 to work up to the python version check
 from __future__ import print_function
 

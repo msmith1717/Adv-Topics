@@ -1,3 +1,8 @@
+'''
+Author: Brian Sea
+
+Implmentation of RSA keygeneration 
+'''
 # Allow Python 2 to work up to the python version check
 from __future__ import print_function
 

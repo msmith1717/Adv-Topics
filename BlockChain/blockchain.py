@@ -29,7 +29,7 @@ Attributes:
     sender: The account of the sender (public key)
     amount: number of coins sent from sender to recv
 """
-class Transaction:
+class Transaction(json.JSONEncoder):
 
     """
     Constructs a timestamped transaction
@@ -112,11 +112,15 @@ class Transaction:
         hasher.update(str(self.timestamp).encode())
         return hasher.hexdigest()
 
+
+    def default(self, object):
+        return {'__{}__'.format(self.__class__.__name__): self.__dict__}
+
     """
         returns a String in JSON format
     """
     def __repr__(self):
-        return json.dumps(self.__dict__)
+        return str(self.default(self))
 
 """
     Represents a block header (and linked transactions) on our blockchain
@@ -134,7 +138,7 @@ class Transaction:
             data integrity of all linked transactions in a more computationally
             efficient manner
 """
-class Block:
+class Block(json.JSONEncoder):
 
     """
         Constructs a block header for our blockchain.  Notes:
@@ -169,7 +173,11 @@ class Block:
         Returns a JSON of the current block
     """
     def __repr__(self):
-        return json.dumps(self.__dict__)
+        return str(self.default(self))
+
+    def default(self, object):
+        return {'__{}__'.format(self.__class__.__name__): self.__dict__}
+
 
     """
         Generates the Merkle Root of a tree using the hashes
@@ -310,12 +318,17 @@ class BlockChain:
     def __iter__(self):
         return BlockChain.List_Iterator(self)
 
+    # Start a new iterator at an arbitary spot in the block chain
     def iterator(self, start=0):
         it = BlockChain.List_Iterator(self)
         
         s = 0
-        while s < start:
-            next(it)
+        try:
+            while s < start:
+                next(it)
+        except StopIteration:
+            pass
+
         return it
 
     # Grab the first block of the chain

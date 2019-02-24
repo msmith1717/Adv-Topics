@@ -28,7 +28,20 @@ class ChainEncoder(json.JSONEncoder):
             return object.toJSON()
         else:
             return json.JSONEncoder.default(self, object)
-            
+
+class ChainDecoder(json.JSONDecoder):
+    def object_hook(self, obj):
+        if '__type__' not in obj:
+            return obj
+
+        type = obj['__type__']
+        if type == 'Transaction':
+            obj.pop('__type__')
+
+            rtn = Transaction.parseJSON(obj)
+            return rtn
+        
+        return obj
 """
 Represents a transaction on blockchain.
 Attributes:
@@ -45,30 +58,40 @@ class Transaction:
         amount: number of coins to send
         sender: Wallet of the sender; None indicates 
                 a transaction by the System
+        timestamp: the timestamp of the transaction
         hash: the SHA256 hash of the transaction
             signed by the private key of the sender or, if the 
 			transaction is a System transaction, by the private key
-			of the receiver (a miner reward)
+			of the receiver (a miner reward).
     """
-    def __init__(self, recv, amount = 0, sender = None):
+    def __init__(self, recv, amount = 0, sender = None, timestamp = None, hash = None):
         self.timestamp = time.time()
-        self.recv = recv.public+recv.n
+        self.recv = recv.public
         self.amount = amount
         self.sender = None
 
-        if sender != None:
-            self.sender = sender.public+sender.n
+        # Already made transaction, replace the timestamp
+        if timestamp != None:
+            self.timestamp = timestamp
 
-        # Calculate the SHA256 hash 
-        self.hash = self.sha256()
-
-        # Sign the hash if the sender is not the System
         if sender != None:
-            self.hash = encrypt.encryptWithKey(sender.private+sender.n, self.hash)
-        # System Transactions get signed with private key of the receiver
-        # because this is a miner reward
+            self.sender = sender.public
+
+        # We need to generate the hash and sign the transaction
+        if hash == None:
+            # Calculate the SHA256 hash 
+            self.hash = self.sha256()
+
+            # Sign the hash if the sender is not the System
+            if sender != None:
+                self.hash = encrypt.encryptWithKey(sender.private, self.hash)
+            # System Transactions get signed with private key of the receiver
+            # because this is a miner reward
+            else:
+                self.hash = encrypt.encryptWithKey(recv.private, self.hash)
         else:
-            self.hash = encrypt.encryptWithKey(recv.private+recv.n, self.hash)
+            # Already hashed and signed!
+            self.hash = hash
 
         # Verify the transaction was created correctly
         self.verify()
@@ -90,7 +113,7 @@ class Transaction:
         else:
         # If the sender is the System then unsign it with the receiver's ID
             unsigned_hash = encrypt.decryptWithKey(self.recv, self.hash)
-        
+
         if self.sha256() != unsigned_hash:
             raise Exception('Hash Mismatch')
         
@@ -127,6 +150,15 @@ class Transaction:
         json.update(self.__dict__)
 
         return json
+
+    @staticmethod
+    def parseJSON(json):
+
+        receiver = Wallet('', json['recv'], '')
+        sender = Wallet('', json['sender'], '')
+
+        return Transaction(receiver, json['amount'], sender, 
+                                json['timestamp'], json['hash'])
 
     """
         returns a String in JSON format
@@ -525,14 +557,14 @@ class BlockChain:
     known at all times.  For example, the only time private keys are known
     will be by the issuer of each Transaction.
 """
-class Wallet(json.JSONEncoder):
+class Wallet:
 
     """
     Create a wallet with Base64 encoded strings or with 
     public and private being tuples with numbers.  If tuples
     are used then the value passed for 'n' is ignored.
     """
-    def __init__(self, realname, public, private, n = None):
+    def __init__(self, realname, public, private, n = ""):
         if realname == None or len(realname.strip()) == 0:
             realname = ""
 
@@ -546,9 +578,8 @@ class Wallet(json.JSONEncoder):
             
 
         self.name = realname
-        self.public = public
-        self.private = private
-        self.n = n
+        self.public = public+n
+        self.private = private+n
     
     def toJSON(self):
         json = {

@@ -28,7 +28,7 @@ class ChainEncoder(json.JSONEncoder):
             return object.toJSON()
         else:
             return json.JSONEncoder.default(self, object)
-
+            
 """
 Represents a transaction on blockchain.
 Attributes:
@@ -122,7 +122,7 @@ class Transaction:
 
     def toJSON(self):
         json = {
-            "__class__": self.__class__.__name__,
+            "__type__": self.__class__.__name__,
         }
         json.update(self.__dict__)
 
@@ -183,7 +183,7 @@ class Block:
 
     def toJSON(self):
         jsonObject = {
-            "__class__": self.__class__.__name__
+            "__type__": self.__class__.__name__
         }
         jsonObject.update(self.__dict__)
 
@@ -552,7 +552,7 @@ class Wallet(json.JSONEncoder):
     
     def toJSON(self):
         json = {
-            "__class__": self.__class__.__name__
+            "__type__": self.__class__.__name__
         }
         json.update(self.__dict__)
         return json

@@ -106,7 +106,7 @@ class Transaction:
     """
     def verify(self):
 
-        # Unsigned the hash   
+        # Unsign the hash if needed 
         unsigned_hash = self.hash
         if self.sender != None:
             unsigned_hash = encrypt.decryptWithKey(self.sender, self.hash)
@@ -285,6 +285,12 @@ class Block:
 
         return True
 
+    def containsTransaction(self, transaction):
+        for trans in self.transactions:
+            if transaction.hash == trans.hash:
+                return True
+        return False
+
     """
         Calculates the SHA256 hash of the data currently linked with this Block
         Data used in the hash:
@@ -354,6 +360,7 @@ class BlockChain:
     """
     def __init__(self, creator):
         
+        self.head = None
         self.tail = None
         originalTransaction = [Transaction(creator, BlockChain.SEED)]
         genData, rejected = self.mineBlock(originalTransaction)
@@ -465,6 +472,14 @@ class BlockChain:
                 transaction.verify()
             except Exception as err:
                 raise Exception( 'Invalid Transaction: ' + str(err) )
+
+        
+        # Search current chain to make sure the transaction is not
+        # already in a block
+        for block in self:
+            if block.containsTransaction(transaction):
+                raise Exception('Chain already has transaction')
+
 
         return verified
 

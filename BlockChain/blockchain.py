@@ -509,19 +509,36 @@ class BlockChain:
     known at all times.  For example, the only time private keys are known
     will be by the issuer of each Transaction.
 """
-class Wallet:
-    def __init__(self, realname, public, private, n):
+class Wallet(json.JSONEncoder):
+
+    """
+    Create a wallet with Base64 encoded strings or with 
+    public and private being tuples with numbers.  If tuples
+    are used then the value passed for 'n' is ignored.
+    """
+    def __init__(self, realname, public, private, n = None):
         if realname == None or len(realname.strip()) == 0:
             realname = ""
+
+        if isinstance(public, tuple):
+            public = encrypt.intToBase64String(public[0])
+            n = encrypt.intToBase64String(public[1])
         
+        if isinstance(private, tuple):
+            private = encrypt.intToBase64String(private[0])
+            n = encrypt.intToBase64String(private[1])
+
         self.name = realname
         self.public = public
         self.private = private
         self.n = n
     
     def __repr__(self):
-        return json.dumps(self.__dict__)
+        return str(self.default(self))
 
+    def default(self, object):
+        return {'__{}__'.format(self.__class__.__name__): self.__dict__}
+    
 """
     Testing the Block Chain
 """

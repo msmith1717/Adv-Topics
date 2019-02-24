@@ -22,14 +22,12 @@ if sys.version_info < (3,5):
     sys.exit(1)
 
 
-class TransactionEncoder(json.JSONEncoder):
+class ChainEncoder(json.JSONEncoder):
     def default(self, object):
-        json = {
-            "__class__": object.__class__.__name__
-        }
-        json.update(object.__dict__)
-
-        return json
+        if hasattr(object, 'toJSON'):
+            return object.toJSON()
+        else:
+            return json.JSONEncoder.default(self, object)
 
 """
 Represents a transaction on blockchain.
@@ -122,27 +120,20 @@ class Transaction:
         hasher.update(str(self.timestamp).encode())
         return hasher.hexdigest()
 
+    def toJSON(self):
+        json = {
+            "__class__": self.__class__.__name__,
+        }
+        json.update(self.__dict__)
+
+        return json
+
     """
         returns a String in JSON format
     """
     def __repr__(self):
-        return json.dumps(self, cls=TransactionEncoder)
-
-
-
-class BlockEncoder(json.JSONEncoder):
-    def default(self, object):
-        jsonObject = {
-            "__class__": object.__class__.__name__
-        }
-        jsonObject.update(object.__dict__)
-
-        # Convert the Complex Transactions to strings
-        jsonObject['transactions'] = []
-        for transaction in object.transactions:
-            jsonObject['transactions'].append( json.dumps(transaction, cls=TransactionEncoder))
-
-        return jsonObject
+        return json.dumps(self, cls=ChainEncoder)
+        
 """
     Represents a block header (and linked transactions) on our blockchain
     Attributes:
@@ -190,14 +181,18 @@ class Block:
 		# This block does not get hashed immediately
         self.currHash = None
 
+    def toJSON(self):
+        jsonObject = {
+            "__class__": self.__class__.__name__
+        }
+        jsonObject.update(self.__dict__)
+
+        return jsonObject
     """
         Returns a JSON of the current block
     """
     def __repr__(self):
-        return json.dumps(self, cls=BlockEncoder)
-
-    
-
+        return json.dumps(self, cls=ChainEncoder)
 
     """
         Generates the Merkle Root of a tree using the hashes
@@ -524,15 +519,6 @@ class BlockChain:
 
         return balance
 
-
-class WalletEncoder(json.JSONEncoder):
-    def default(self, object):
-        json = {
-            "__class__": object.__class__.__name__
-        }
-        json.update(object.__dict__)
-        return json
-        
 """
     Represents the known identities and keys of a person.  The values can
     be, an usually are, None because not all information can (or should be)
@@ -564,8 +550,15 @@ class Wallet(json.JSONEncoder):
         self.private = private
         self.n = n
     
+    def toJSON(self):
+        json = {
+            "__class__": self.__class__.__name__
+        }
+        json.update(self.__dict__)
+        return json
+
     def __repr__(self):
-        return json.dumps(self, cls=WalletEncoder)
+        return json.dumps(self, cls=ChainEncoder)
 
     
     

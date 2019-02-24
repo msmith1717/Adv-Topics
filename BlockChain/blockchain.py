@@ -521,12 +521,13 @@ class Wallet(json.JSONEncoder):
             realname = ""
 
         if isinstance(public, tuple):
-            public = encrypt.intToBase64String(public[0])
             n = encrypt.intToBase64String(public[1])
-        
+            public = encrypt.intToBase64String(public[0])
+
         if isinstance(private, tuple):
-            private = encrypt.intToBase64String(private[0])
             n = encrypt.intToBase64String(private[1])
+            private = encrypt.intToBase64String(private[0])
+            
 
         self.name = realname
         self.public = public

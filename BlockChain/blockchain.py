@@ -21,6 +21,16 @@ if sys.version_info < (3,5):
     print('Python version required: 3.5 or higher')
     sys.exit(1)
 
+
+class TransactionEncoder(json.JSONEncoder):
+    def default(self, object):
+        json = {
+            "__class__": object.__class__.__name__
+        }
+        json.update(object.__dict__)
+
+        return json
+
 """
 Represents a transaction on blockchain.
 Attributes:
@@ -29,7 +39,7 @@ Attributes:
     sender: The account of the sender (public key)
     amount: number of coins sent from sender to recv
 """
-class Transaction(json.JSONEncoder):
+class Transaction:
 
     """
     Constructs a timestamped transaction
@@ -112,16 +122,27 @@ class Transaction(json.JSONEncoder):
         hasher.update(str(self.timestamp).encode())
         return hasher.hexdigest()
 
-
-    def default(self, object):
-        return {'__{}__'.format(self.__class__.__name__): self.__dict__}
-
     """
         returns a String in JSON format
     """
     def __repr__(self):
-        return str(self.default(self))
+        return json.dumps(self, cls=TransactionEncoder)
 
+
+
+class BlockEncoder(json.JSONEncoder):
+    def default(self, object):
+        jsonObject = {
+            "__class__": object.__class__.__name__
+        }
+        jsonObject.update(object.__dict__)
+
+        # Convert the Complex Transactions to strings
+        jsonObject['transactions'] = []
+        for transaction in object.transactions:
+            jsonObject['transactions'].append( json.dumps(transaction, cls=TransactionEncoder))
+
+        return jsonObject
 """
     Represents a block header (and linked transactions) on our blockchain
     Attributes:
@@ -138,7 +159,7 @@ class Transaction(json.JSONEncoder):
             data integrity of all linked transactions in a more computationally
             efficient manner
 """
-class Block(json.JSONEncoder):
+class Block:
 
     """
         Constructs a block header for our blockchain.  Notes:
@@ -173,10 +194,9 @@ class Block(json.JSONEncoder):
         Returns a JSON of the current block
     """
     def __repr__(self):
-        return str(self.default(self))
+        return json.dumps(self, cls=BlockEncoder)
 
-    def default(self, object):
-        return {'__{}__'.format(self.__class__.__name__): self.__dict__}
+    
 
 
     """
@@ -503,6 +523,16 @@ class BlockChain:
             idx += 1
 
         return balance
+
+
+class WalletEncoder(json.JSONEncoder):
+    def default(self, object):
+        json = {
+            "__class__": object.__class__.__name__
+        }
+        json.update(object.__dict__)
+        return json
+        
 """
     Represents the known identities and keys of a person.  The values can
     be, an usually are, None because not all information can (or should be)
@@ -535,10 +565,9 @@ class Wallet(json.JSONEncoder):
         self.n = n
     
     def __repr__(self):
-        return str(self.default(self))
+        return json.dumps(self, cls=WalletEncoder)
 
-    def default(self, object):
-        return {'__{}__'.format(self.__class__.__name__): self.__dict__}
+    
     
 """
     Testing the Block Chain

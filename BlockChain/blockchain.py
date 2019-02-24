@@ -373,6 +373,7 @@ class BlockChain:
         try:
             while s < start:
                 next(it)
+                s += 1
         except StopIteration:
             pass
 

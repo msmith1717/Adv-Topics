@@ -1,0 +1,85 @@
+<html>
+    <head>
+        <title>Display Blocks</title>
+
+        <style type='text/css'>
+            ul {
+                list-style: none;
+            }
+            li{
+                padding: 3px;
+                margin: 3px;
+                border-bottom: 1px solid black;
+                word-break: break-all;
+            }
+            div.sectionHeader{
+                background-color: black;
+                color: white;
+                padding: 5px;
+
+                margin-top: 3px;
+            }
+            div.sectionHeader::before{
+                content: "\25C2";
+                padding-right: 3px;
+            }
+            label {
+                display: inline-block;
+                min-width: 100%;
+                
+                cursor: pointer;
+                z-index: 1;
+            }
+
+            input[type='checkbox']{
+                display: none;
+            }
+            input[type='checkbox']:not(:checked) ~ ul{
+                max-height: 0;
+                overflow: hidden;
+            }
+            input[type='checkbox']:not(:checked) ~ label > div.sectionHeader::before{
+                content:"\25B8";
+            }
+        </style>
+    </head>
+    <body>
+        {% for block in blocks %}
+        <div>
+            <input id='block_{{block.index}}' type='checkbox'/>
+            <label for='block_{{block.index}}'><div class='sectionHeader'>Block {{block.index}}</div></label>
+            <ul>
+                <li>Created: {{block.timeStamp}}</li>
+                <li>Hash: {{block.currHash}}</li>
+                <li>Hash of Previous Block: {{block.prevHash}}</li>
+                <li>Nonce: {{block.nonce}}</li>
+
+                <li>Merkle Root: {{block.merkleRoot}}</li>
+                <input id='block_{{block.index}}_transactions' type='checkbox'/>
+                <label for='block_{{block.index}}_transactions'><div class='sectionHeader'>Transactions  ({{block.transactions|length}})</div></label>
+                <ul>
+                    {% for transaction in block.transactions %}
+                    <div>
+                        <input id='block_{{block.index}}_transaction_{{loop.index0}}' type='checkbox'/>
+                        <label for='block_{{block.index}}_transaction_{{loop.index0}}'><div class='sectionHeader'>Transaction {{loop.index0}}</div></label>
+                        <ul>
+                            <li>Amount: {{transaction.amount}}</li>
+                            <li>Created: {{transaction.timestamp}}</li>
+                            <li> Sender:
+                                {% if transaction.sender == None %}
+                                    System
+                                {% else %}
+                                    {{transaction.sender}}
+                                {% endif %}
+                            </li>
+                            <li>Receiver: {{transaction.recv}}</li>
+                            <li>Hash (encrypted): {{transaction.hash}}</li>
+                        </ul>
+                    </div>
+                    {% endfor %}
+                </ul>
+            </ul>
+        </div>
+        {% endfor %}
+    </body>
+</html>

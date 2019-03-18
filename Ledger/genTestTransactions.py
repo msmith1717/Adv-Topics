@@ -4,18 +4,18 @@ import json
 import encrypt as RSA
 import blockchain
 
-testDir = './tests'
+testDir = 'tests'
 
 # Initialize the System Wallet and main BlockChain
-system_public = RSA.load('./Creator_public.key')
-system_private = RSA.load('./Creator_private.key')
+system_public = RSA.load('Creator_public.key')
+system_private = RSA.load('Creator_private.key')
 
 systemWallet = blockchain.Wallet('Creator', system_public, system_private)
 testChain = blockchain.BlockChain(systemWallet)
 
 
-test_public = RSA.load(os.path.join(testDir,'testReceiver_public.key'))
-test_private = RSA.load(os.path.join(testDir,'testReceiver_private.key'))
+test_public = RSA.load('tests/testReceiver_public.key')
+test_private = RSA.load('tests/testReceiver_private.key')
 testWallet = blockchain.Wallet('Tester', test_public, test_private)
 
 testTransaction = blockchain.Transaction(testWallet, 10, systemWallet)

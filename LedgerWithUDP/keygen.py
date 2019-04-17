@@ -124,6 +124,32 @@ def calcD( e, totient ):
 
     return b % totient
 
+def generate_keys(name):
+    numBits = 2048
+    start_time = time.time()
+    q = p = getPrime(numBits)
+    while p == q: 
+        q = getPrime(numBits)
+
+    n = p*q
+    totient = (p-1)*(q-1)
+
+    e = pickE( totient )
+    d = calcD( totient, e )
+    end_time = time.time()
+
+    # Encoded E, D, and N to Base-64 strings
+    eEncoded = base64.b64encode(e.to_bytes( math.ceil(e.bit_length()/8), 'little'))
+    dEncoded = base64.b64encode(d.to_bytes( math.ceil(d.bit_length()/8), 'little'))
+    nEncoded = base64.b64encode(n.to_bytes( math.ceil(n.bit_length()/8), 'little'))
+    eEncoded = eEncoded.decode()
+    dEncoded = dEncoded.decode()
+    nEncoded = nEncoded.decode()
+
+    # Print to files
+    print( eEncoded+nEncoded, file=open(name+'_public.key', 'w'))
+    print( dEncoded+nEncoded, file=open(name+'_private.key', 'w'))
+
 if __name__ == '__main__':
     numBits = 2048
     start_time = time.time()

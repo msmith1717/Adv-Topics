@@ -19,6 +19,7 @@ from flask import Flask
 from flask import render_template
 from flask import request
 from flask import jsonify
+from flask_sqlalchemy import SQLAlchemy
 
 import blockchain
 import encrypt as RSA
@@ -63,20 +64,69 @@ udpCaster = udpbroadcaster.UDPBroadcaster(serverWallet, peerList, peerLock)
 # flask server
 app = Flask(__name__)
 app.config['ENV'] = 'development'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///./test.db'
+db = SQLAlchemy(app)
+
+class blockchain_db(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    system_public = db.Column(db.Text, unique=True, nullable=False)
+    system_private = db.Column(db.Text, unique=True, nullable=False)
+
+    def __repr__(self):
+        return "BChain {0}: {1}, {2}".format(self.id, self.system_public, self.system_private)
+
+class peer_db(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ip = db.Column(db.Text, unique=True, nullable=False)
+    port = db.Column(db.Integer, unique=False, nullable=False)
+    nonce = db.Column(db.Integer, unique=False, nullable=False)
+    publicKey = db.Column(db.Text, unique=False, nullable=False)
+
+class block_id(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    blockchain_id = db.Column(db.Integer, unique=False, nullable=False)
+    index = db.Column(db.Integer, unique=False, nullable=False)
+    timeStamp = db.Column(db.Text, unique=False, nullable=False)
+    prevHash = db.Column(db.Text, unique=False, nullable=False)
+    nonce = db.Column(db.Integer, unique=False, nullable=False)
+    merkelRoot = db.Column(db.Integer, unique=False, nullable=False)
+    currHash = db.Column(db.Integer, unique=False, nullable=False)
+
+class transaction_db(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    block_id = db.Column(db.Integer, unique=False, nullable=False)
+    order = db.Column(db.Integer, unique=False, nullable=False)
+    timestamp = db.Column(db.Text, unique=False, nullable=False)
+    amount = db.Column(db.Integer, unique=False, nullable=False)
+    recv = db.Column(db.Text, unique=False, nullable=False)
+    sender = db.Column(db.Text, unique=False, nullable=False)
+    hash = db.Column(db.Text, unique=False, nullable=False)
+
+db.create_all()
+
+system_public_string = RSA.intToBase64String(system_public[0]) + RSA.intToBase64String(system_public[1])
+system_private_string = RSA.intToBase64String(system_private[0]) + RSA.intToBase64String(system_private[1])
+
+blockchain_one = blockchain_db(system_public = system_public_string, system_private = system_private_string)
+
+if len(blockchain_db.query.filter_by(system_public = system_public_string, system_private = system_private_string).all()) == 0:
+    db.session.add(blockchain_one)
+db.session.commit()
+
 
 @app.route('/transactions', methods=['POST'])
 def addTransactions(transactions=[]):
     try:
         transactionsJSON = request.get_json()
         transactions = []
-        
+
         for transaction in transactionsJSON['transactions']:
             trans = blockchain.Transaction.parseJSON(transaction)
             transactions.append(trans)
 
         MainChain.mineBlock(transactions)
         return jsonify({'status':'ok', 'numAccepted':len(transactions)})
-        
+
     except RuntimeError:
         pass
 
@@ -144,7 +194,7 @@ def addPeers():
         # load up the data
         data = RSA.decryptWithKey(serverWallet.private, peersJSON['data'])
         data = json.loads(data)
-        
+
         peer = Peer(peersJSON['id'], data['address'][0], data['address'][1], data['nonce'])
         key = peer.ip+':'+str(peer.port)
 
@@ -155,6 +205,10 @@ def addPeers():
             for key, sendPeer in peerList.items():
                 rtnPeers.append(sendPeer.toJSON())
             peerList[key] = peer
+            peer_add = peer_db(ip = peer.ip, port = peer.port, nonce = peer.nonce, publicKey = peer.publicKey)
+            db.session.add(peer_add)
+            print("Committed peer")
+            db.session.commit()
         peerLock.release()
 
         # generate a nonce for communicating with me
@@ -173,7 +227,7 @@ def addPeers():
         # An exception happened, so we need to make sure the lock is released!
         if peerLock.locked():
             peerLock.release()
-        pass 
+        pass
 
     return "ERROR"
 
